@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronograma de Tarefas</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-radius: 8px;
+        }
+
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+
+        h1 {
+            color: var(--dark-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+
+        .container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+        }
+
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+
+        button.danger {
+            background-color: var(--danger-color);
+        }
+
+
+        button.success {
+            background-color: var(--success-color);
+        }
+
+
+        .task-list {
+            margin-top: 30px;
+        }
+
+
+        .task-item {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+
+        .task-item.completed {
+            background-color: #d4edda;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+
+        .task-content {
+            flex-grow: 1;
+        }
+
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+
+        .task-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+
+        .task-steps {
+            margin-top: 15px;
+        }
+
+
+        .task-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 10px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            border: 1px solid #eee;
+        }
+
+
+        .task-step.completed {
+            background-color: #d4edda;
+            text-decoration: line-through;
+        }
+
+
+        .task-step-checkbox {
+            margin-right: 10px;
+        }
+
+
+        .step-content {
+            flex-grow: 1;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow: hidden;
+            /* ou simplesmente remova o overflow */
+        }
+
+
+
+
+        .task-progress {
+            margin-top: 10px;
+            height: 10px;
+            background-color: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--success-color);
+            transition: width 0.3s;
+        }
+
+
+        .buttons-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: space-between;
+        }
+
+
+        .file-input {
+            display: none;
+        }
+
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            max-width: 500px;
+            width: 90%;
+        }
+
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+
+        .hidden {
+            display: none;
+        }
+
+
+        .drag-handle {
+            cursor: move;
+            padding: 5px;
+            margin-right: 10px;
+            color: #888;
+        }
+
+
+        .status-message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: var(--border-radius);
+            background-color: #d4edda;
+            color: #155724;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+
+        .status-message.show {
+            opacity: 1;
+        }
+
+
+        .task-item {
+            display: flex;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #fff;
+            border-radius: 5px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+
+        .task-actions {
+            display: flex;
+            justify-content: flex-start;
+
+
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+
+        .task-content {
+            padding-top: 5px;
+        }
+
+
+        /* Estilos para a barra de pesquisa */
+        .search-container {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+
+        .search-box {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+        }
+
+
+        #searchInput {
+            width: 100%;
+            padding: 10px 35px 10px 15px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+
+        #clearSearchBtn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+        }
+
+
+        #searchInput:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+
+        /* Estilos para a paginação */
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 0px;
+        }
+
+
+        .pagination-controls button {
+            padding: 8px 15px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+
+        .pagination-controls button:hover {
+            background-color: #e0e0e0;
+        }
+
+
+        .pagination-controls button:disabled {
+            background-color: #f9f9f9;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+
+        #pageInfo {
+            margin: 0 10px;
+        }
+
+
+        #pageSizeSelect {
+            margin-left: 15px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        /* Estilos para o botão de áudio */
+        .audio-btn-container {
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .audio-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .audio-btn:hover {
+            background-color: #218838;
+        }
+
+        .audio-btn.recording {
+            background-color: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        .audio-btn.recording:hover {
+            background-color: #c82333;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .audio-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+
+        .audio-status.listening {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .audio-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .create-btn-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Estilos para o botão de leitura */
+        .read-task-btn {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .read-task-btn:hover {
+            background-color: #138496;
+        }
+
+        .read-task-btn.reading {
+            background-color: #fd7e14;
+            animation: reading-pulse 2s infinite;
+        }
+
+        .read-task-btn.reading:hover {
+            background-color: #e96b00;
+        }
+
+        @keyframes reading-pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .speech-controls {
+            margin-top: 10px;
+            display: none;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .speech-controls.active {
+            display: flex;
+        }
+
+        .speech-control-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .speech-control-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .speech-status {
+            font-size: 12px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        /* Estilos para o botão Mostrar Mais */
+        .show-more-container {
+            text-align: center;
+            margin: 15px 0;
+        }
+
+
+        .show-more-btn {
+            padding: 8px 16px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+
+        .show-more-btn:hover {
+            background-color: #357abb;
+        }
+
+
+        .view-mode-container {
+            margin: 10px 0;
+            text-align: right;
+            padding-right: 10px;
+        }
+
+
+        #viewModeSelect {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .task-step {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .task-step:hover {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+
+        .task-step.completed:hover {
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        /* Estilos para expandir/recolher cronogramas */
+        .task-steps.collapsed {
+            display: none;
+        }
+
+        .expand-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 0 5px 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+        }
+
+        .expand-btn:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .expand-btn .expand-icon {
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .expand-btn.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Melhorar a visualização quando expandido */
+        .task-item.expanded {
+            border-left: 4px solid #667eea;
+        }
+
+        .task-item.expanded .task-steps {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                max-height: 500px;
+                transform: translateY(0);
+            }
+        }
+
+        /* Indicador visual para cronogramas recolhidos */
+        .task-item.collapsed .task-info::after {
+            content: " • Clique em 'Expandir' para ver os passos";
+            color: #6c757d;
+            font-style: italic;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+
+<body>
+    <h1>Cronograma de Tarefas</h1>
+
+
+    <div class="container">
+        <div class="form-group">
+            <label for="taskName">Nome do Cronograma:</label>
+            <input type="text" id="taskName" placeholder="Ex: Pintar uma roda">
+        </div>
+
+
+        <div class="form-group">
+            <label for="taskSteps">Passos a serem executados (um por linha):</label>
+            <textarea id="taskSteps"
+                placeholder="Ex:&#10;Tirar rodas&#10;Pegar 4 lixas 320&#10;Lixar&#10;Limpar com pano úmido&#10;Soprar&#10;Colocar as capas&#10;Levar para estufa&#10;Pintar&#10;Montar"></textarea>
+        </div>
+
+
+        <div class="create-btn-row">
+            <button id="createTaskBtn">Criar Cronograma</button>
+            <div class="audio-btn-container">
+                <button id="audioBtn" class="audio-btn">
+                    <span id="audioIcon">🎤</span>
+                    <span id="audioBtnText">Falar</span>
+                </button>
+            </div>
+        </div>
+        <div id="audioStatus" class="audio-status"></div>
+    </div>
+
+
+    <div id="statusMessage" class="status-message"></div>
+    <!-- Adicionar barra de pesquisa acima da lista de tarefas -->
+    <div class="search-container">
+        <div class="form-group search-box">
+            <input type="text" id="searchInput" placeholder="Pesquisar cronogramas...">
+            <button id="clearSearchBtn">✕</button>
+        </div>
+    </div>
+
+
+    <!-- Seletor para modo de visualização -->
+    <div class="view-mode-container">
+        <select id="viewModeSelect">
+            <option value="compact">Modo Compacto (2 últimos)</option>
+            <option value="all">Mostrar Todos</option>
+        </select>
+    </div>
+
+
+    <div class="task-list" id="taskList">
+        <!-- Tasks will be added here dynamically -->
+    </div>
+
+
+    <!-- Botão "Mostrar Mais" -->
+    <div class="show-more-container">
+        <button id="showMoreBtn" class="show-more-btn">Mostrar Mais</button>
+    </div>
+
+
+    <!-- Adicionar paginação abaixo da lista de tarefas -->
+    <div class="pagination-controls" id="paginationControls">
+        <button id="prevPageBtn">Anterior</button>
+        <span id="pageInfo">Página 1 de 1</span>
+        <button id="nextPageBtn">Próximo</button>
+        <select id="pageSizeSelect">
+            <option value="2">2 por página</option>
+            <option value="5">5 por página</option>
+            <option value="10" selected>10 por página</option>
+            <option value="20">20 por página</option>
+        </select>
+    </div>
+    <div class="buttons-row">
+        <button id="exportBtn">Exportar Cronogramas</button>
+        <button id="importBtn">Importar Cronogramas</button>
+        <input type="file" id="importInput" class="file-input" accept=".json">
+    </div>
+
+
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Cronograma</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="editTaskName">Nome do Cronograma:</label>
+                <input type="text" id="editTaskName">
+            </div>
+            <div class="form-group">
+                <label for="editTaskSteps">Passos a serem executados (um por linha):</label>
+                <textarea id="editTaskSteps"></textarea>
+            </div>
+            <button id="saveTaskBtn">Salvar Alterações</button>
+        </div>
+    </div>
+
+
+    <script>
+        // Inicialização do IndexedDB
+        let db;
+        const DB_NAME = 'TaskSchedulerDB';
+        const STORE_NAME = 'tasks';
+        const DB_VERSION = 1;
+
+        // Variável para controlar quais cronogramas estão expandidos
+        let expandedTasks = new Set();
+        // Variáveis para pesquisa e visualização
+        let currentPage = 1;
+        let pageSize = 10;
+        let filteredTasks = [];
+        let viewMode = 'compact'; // 'compact' ou 'all'
+        let totalLoadedTasks = 2; // Começar mostrando apenas 2 tarefas no modo compacto
+        // Variáveis para reconhecimento de voz
+        let recognition = null;
+        let isRecording = false;
+        let isFirstAudioInput = true;
+        // Variáveis para síntese de voz (leitura)
+        let speechSynthesis = window.speechSynthesis;
+        let currentUtterance = null;
+        let isReading = false;
+        let currentReadingTaskId = null;
+
+
+        // Abrir conexão com o banco de dados
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+
+        request.onerror = (event) => {
+            console.error('Erro ao abrir o banco de dados:', event.target.error);
+            showStatusMessage('Erro ao abrir o banco de dados', 'error');
+        };
+
+
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                store.createIndex('name', 'name', { unique: false });
+                store.createIndex('createdAt', 'createdAt', { unique: false });
+            }
+        };
+
+
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            console.log('Banco de dados aberto com sucesso');
+            loadTasks();
+        };
+
+
+        // Nova função para atualizar informações de paginação
+        function updatePaginationInfo(totalItems, totalPages) {
+            // Atualizar texto da paginação
+            pageInfo.textContent = `Página ${currentPage} de ${totalPages || 1}`;
+
+
+            // Desabilitar/habilitar botões de navegação
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
+
+
+            // Ocultar controles de paginação se houver apenas uma página
+            const paginationControls = document.getElementById('paginationControls');
+            paginationControls.style.display = totalPages <= 1 ? 'none' : 'flex';
+        }
+
+
+        // Função para atualizar a visibilidade do botão "Mostrar Mais"
+        function updateShowMoreButton() {
+            const showMoreBtn = document.getElementById('showMoreBtn');
+
+
+            if (viewMode === 'compact' && filteredTasks.length > totalLoadedTasks) {
+                showMoreBtn.style.display = 'block';
+            } else {
+                showMoreBtn.style.display = 'none';
+            }
+        }
+
+
+        // Referências aos elementos do DOM
+        const taskNameInput = document.getElementById('taskName');
+        const taskStepsInput = document.getElementById('taskSteps');
+        const createTaskBtn = document.getElementById('createTaskBtn');
+        const taskList = document.getElementById('taskList');
+        const exportBtn = document.getElementById('exportBtn');
+        const importInput = document.getElementById('importInput');
+        const taskModal = document.getElementById('taskModal');
+        const editTaskNameInput = document.getElementById('editTaskName');
+        const editTaskStepsInput = document.getElementById('editTaskSteps');
+        const saveTaskBtn = document.getElementById('saveTaskBtn');
+        const modalCloseBtn = document.querySelector('.modal-close');
+        const statusMessage = document.getElementById('statusMessage');
+
+
+        // Adicionar referências aos elementos do DOM para a busca e paginação
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const pageInfo = document.getElementById('pageInfo');
+        const pageSizeSelect = document.getElementById('pageSizeSelect');
+        const viewModeSelect = document.getElementById('viewModeSelect');
+        const showMoreBtn = document.getElementById('showMoreBtn');
+        // Referências para áudio
+        const audioBtn = document.getElementById('audioBtn');
+        const audioIcon = document.getElementById('audioIcon');
+        const audioBtnText = document.getElementById('audioBtnText');
+        const audioStatus = document.getElementById('audioStatus');
+
+
+        let currentEditTaskId = null;
+
+
+        // Event listeners para busca e paginação
+        searchInput.addEventListener('input', function () {
+            const searchValue = this.value.trim();
+            if (searchValue) {
+                clearSearchBtn.style.display = 'block';
+            } else {
+                clearSearchBtn.style.display = 'none';
+            }
+            currentPage = 1; // Reset para a primeira página ao pesquisar
+            totalLoadedTasks = viewMode === 'compact' ? 2 : filteredTasks.length; // Reset do número de tarefas carregadas
+            loadTasks();
+        });
+
+
+        clearSearchBtn.addEventListener('click', function () {
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            currentPage = 1; // Reset para a primeira página ao limpar a pesquisa
+            totalLoadedTasks = viewMode === 'compact' ? 2 : filteredTasks.length; // Reset do número de tarefas carregadas
+            loadTasks();
+        });
+
+
+        prevPageBtn.addEventListener('click', function () {
+            if (currentPage > 1) {
+                currentPage--;
+                loadTasks();
+            }
+        });
+
+
+        nextPageBtn.addEventListener('click', function () {
+            const totalPages = Math.ceil(filteredTasks.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadTasks();
+            }
+        });
+
+
+        pageSizeSelect.addEventListener('change', function () {
+            pageSize = parseInt(this.value);
+            currentPage = 1; // Reset para a primeira página ao alterar o tamanho da página
+            loadTasks();
+        });
+
+
+        // Event listener para o seletor de modo de visualização
+        viewModeSelect.addEventListener('change', function () {
+            viewMode = this.value;
+            currentPage = 1; // Reset para a primeira página ao mudar o modo de visualização
+
+
+            // Redefinir o número de tarefas carregadas com base no modo de visualização
+            totalLoadedTasks = viewMode === 'compact' ? 2 : filteredTasks.length;
+
+
+            // Atualizar a exibição dos controles de paginação com base no modo
+            const paginationControls = document.getElementById('paginationControls');
+            paginationControls.style.display = viewMode === 'all' ? 'flex' : 'none';
+
+
+            loadTasks();
+        });
+
+
+        // Event listener para o botão "Mostrar Mais"
+        showMoreBtn.addEventListener('click', function () {
+            // Aumentar o número de tarefas carregadas em 2
+            totalLoadedTasks += 2;
+
+
+            // Se todas as tarefas já foram carregadas, esconder o botão
+            if (totalLoadedTasks >= filteredTasks.length) {
+                totalLoadedTasks = filteredTasks.length;
+                this.style.display = 'none';
+            }
+
+
+            // Recarregar as tarefas com o novo valor
+            renderTasks(filteredTasks.slice(0, totalLoadedTasks));
+        });
+
+
+        // Event Listeners
+        createTaskBtn.addEventListener('click', createTask);
+        exportBtn.addEventListener('click', exportTasks);
+        importInput.addEventListener('change', importTasks);
+        document.getElementById('importBtn').addEventListener('click', () => {
+            document.getElementById('importInput').click();
+        });
+        modalCloseBtn.addEventListener('click', closeModal);
+        saveTaskBtn.addEventListener('click', saveTaskChanges);
+        audioBtn.addEventListener('click', toggleAudioRecording);
+
+        // Funções para reconhecimento de voz
+        function initSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showAudioStatus('Reconhecimento de voz não suportado neste navegador', 'error');
+                audioBtn.style.display = 'none';
+                return false;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = function () {
+                console.log('Reconhecimento de voz iniciado');
+                showAudioStatus('🎤 Escutando... Fale agora!', 'listening');
+            };
+
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript.trim();
+                console.log('Texto reconhecido:', transcript);
+
+                if (transcript) {
+                    handleAudioInput(transcript);
+                }
+            };
+
+            recognition.onerror = function (event) {
+                console.error('Erro no reconhecimento:', event.error);
+                let errorMessage = 'Erro no reconhecimento de voz';
+
+                switch (event.error) {
+                    case 'no-speech':
+                        errorMessage = 'Nenhuma fala detectada. Tente novamente.';
+                        break;
+                    case 'audio-capture':
+                        errorMessage = 'Microfone não encontrado ou sem permissão.';
+                        break;
+                    case 'not-allowed':
+                        errorMessage = 'Permissão de microfone negada.';
+                        break;
+                }
+
+                showAudioStatus(errorMessage, 'error');
+                stopRecording();
+            };
+
+            recognition.onend = function () {
+                console.log('Reconhecimento de voz finalizado');
+                stopRecording();
+                hideAudioStatus();
+            };
+
+            return true;
+        }
+
+        function toggleAudioRecording() {
+            if (!recognition && !initSpeechRecognition()) {
+                return;
+            }
+
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        function startRecording() {
+            try {
+                isRecording = true;
+                audioBtn.classList.add('recording');
+                audioIcon.textContent = '⏸️';
+                audioBtnText.textContent = 'Parar';
+
+                recognition.start();
+            } catch (error) {
+                console.error('Erro ao iniciar gravação:', error);
+                showAudioStatus('Erro ao iniciar gravação', 'error');
+                stopRecording();
+            }
+        }
+
+        function stopRecording() {
+            if (recognition && isRecording) {
+                recognition.stop();
+            }
+
+            isRecording = false;
+            audioBtn.classList.remove('recording');
+            audioIcon.textContent = '🎤';
+            audioBtnText.textContent = 'Falar';
+        }
+
+        function handleAudioInput(text) {
+            if (isFirstAudioInput) {
+                // Primeira entrada de áudio vai para o título
+                taskNameInput.value = text;
+                isFirstAudioInput = false;
+
+                // Focar no textarea para próximas entradas
+                taskStepsInput.focus();
+
+                showAudioStatus('✅ Título definido! Continue falando para adicionar passos...', 'listening');
+
+                // Aguardar um pouco e permitir nova gravação
+                setTimeout(() => {
+                    hideAudioStatus();
+                }, 2000);
+            } else {
+                // Entradas subsequentes vão para os passos
+                const currentSteps = taskStepsInput.value;
+                const newStep = currentSteps ? currentSteps + '\n' + text : text;
+                taskStepsInput.value = newStep;
+
+                // Rolar para o final do textarea
+                taskStepsInput.scrollTop = taskStepsInput.scrollHeight;
+
+                showAudioStatus('✅ Passo adicionado!', 'listening');
+
+                setTimeout(() => {
+                    hideAudioStatus();
+                }, 1500);
+            }
+        }
+
+        function showAudioStatus(message, type) {
+            audioStatus.textContent = message;
+            audioStatus.className = `audio-status ${type}`;
+        }
+
+        function hideAudioStatus() {
+            audioStatus.className = 'audio-status';
+        }
+        // Funções para síntese de voz (leitura)
+        function toggleReadTask(taskId) {
+            if (isReading && currentReadingTaskId === taskId) {
+                stopReading();
+            } else {
+                startReadingTask(taskId);
+            }
+        }
+
+        function startReadingTask(taskId) {
+            // Parar qualquer leitura em andamento
+            if (isReading) {
+                stopReading();
+            }
+
+            // NOVO: Expandir automaticamente o cronograma ao iniciar leitura
+            const taskElement = document.querySelector(`[data-taskid="${taskId}"].expand-btn`).closest('.task-item');
+            if (taskElement && taskElement.classList.contains('collapsed')) {
+                expandedTasks.add(taskId); // Adicionar ao estado de expandidos
+                const expandBtn = taskElement.querySelector('.expand-btn');
+                const fakeEvent = { preventDefault: () => { }, stopPropagation: () => { }, currentTarget: expandBtn };
+                toggleTaskExpansion(fakeEvent, taskId);
+            }
+
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(taskId);
+
+            request.onsuccess = (event) => {
+                const task = event.target.result;
+                if (task) {
+                    readTaskContent(task, taskId);
+                }
+            };
+
+            request.onerror = (event) => {
+                console.error('Erro ao obter tarefa para leitura:', event.target.error);
+                showStatusMessage('Erro ao obter cronograma para leitura', 'error');
+            };
+        }
+
+        function readTaskContent(task, taskId) {
+            // Preparar o texto para leitura
+            let textToRead = `Cronograma: ${task.name}. `;
+
+            if (task.steps && task.steps.length > 0) {
+                textToRead += `Este cronograma possui ${task.steps.length} passos: `;
+
+                task.steps.forEach((step, index) => {
+                    const stepNumber = index + 1;
+                    const status = step.completed ? 'concluído' : 'pendente';
+                    textToRead += `Passo ${stepNumber}: ${step.text}, status ${status}. `;
+                });
+            } else {
+                textToRead += 'Este cronograma não possui passos definidos.';
+            }
+
+            // Criar utterance
+            currentUtterance = new SpeechSynthesisUtterance(textToRead);
+            currentUtterance.lang = 'pt-BR';
+            currentUtterance.rate = 0.9; // Velocidade um pouco mais lenta
+            currentUtterance.pitch = 1;
+            currentUtterance.volume = 1;
+
+            // Event listeners para a utterance
+            currentUtterance.onstart = () => {
+                isReading = true;
+                currentReadingTaskId = taskId;
+                updateReadButton(taskId, true);
+                console.log('Iniciou leitura do cronograma:', task.name);
+            };
+
+            currentUtterance.onend = () => {
+                isReading = false;
+                currentReadingTaskId = null;
+                updateReadButton(taskId, false);
+                console.log('Finalizou leitura do cronograma:', task.name);
+            };
+
+            currentUtterance.onerror = (event) => {
+                console.error('Erro na síntese de voz:', event);
+                isReading = false;
+                currentReadingTaskId = null;
+                updateReadButton(taskId, false);
+                showStatusMessage('Erro na leitura do cronograma', 'error');
+            };
+
+            // Iniciar a leitura
+            try {
+                speechSynthesis.speak(currentUtterance);
+            } catch (error) {
+                console.error('Erro ao iniciar síntese de voz:', error);
+                showStatusMessage('Erro ao iniciar leitura. Síntese de voz não suportada.', 'error');
+            }
+        }
+
+        function stopReading() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+            }
+
+            if (currentReadingTaskId) {
+                updateReadButton(currentReadingTaskId, false);
+            }
+
+            isReading = false;
+            currentReadingTaskId = null;
+            currentUtterance = null;
+        }
+
+        function updateReadButton(taskId, isCurrentlyReading) {
+            const readBtn = document.querySelector(`[data-taskid="${taskId}"].read-task-btn`);
+            if (readBtn) {
+                const btnText = readBtn.querySelector('.read-btn-text');
+
+                if (isCurrentlyReading) {
+                    readBtn.classList.add('reading');
+                    btnText.textContent = '⏸️ Parar';
+                } else {
+                    readBtn.classList.remove('reading');
+                    btnText.textContent = '🔊 Ler';
+                }
+            }
+        }
+
+        function checkSpeechSynthesisSupport() {
+            if (!('speechSynthesis' in window)) {
+                console.warn('Síntese de voz não suportada neste navegador');
+                return false;
+            }
+            return true;
+        }
+
+        // Funçao para criar novo cronograma
+        function createTask() {
+            const name = taskNameInput.value.trim();
+            if (!name) {
+                showStatusMessage('Por favor, insira um nome para o cronograma', 'error');
+                return;
+            }
+
+
+            const stepsText = taskStepsInput.value.trim();
+            if (!stepsText) {
+                showStatusMessage('Por favor, insira pelo menos um passo', 'error');
+                return;
+            }
+
+
+            const steps = stepsText.split('\n')
+                .map(step => step.trim())
+                .filter(step => step.length > 0)
+                .map(step => ({ text: step, completed: false }));
+
+
+            if (steps.length === 0) {
+                showStatusMessage('Por favor, insira pelo menos um passo válido', 'error');
+                return;
+            }
+
+
+            const task = {
+                name,
+                steps,
+                createdAt: new Date().toISOString(),
+                completed: false
+            };
+
+
+            saveTask(task);
+
+
+            // Limpar os campos
+            taskNameInput.value = '';
+            taskStepsInput.value = '';
+            // Reset do estado de áudio após criar tarefa
+            isFirstAudioInput = true;
+        }
+
+
+        function saveTask(task) {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+
+
+            const request = store.add(task);
+
+
+            request.onsuccess = () => {
+                showStatusMessage('Cronograma criado com sucesso!');
+                // Reset para modo compacto e mostrar as 2 últimas tarefas
+                if (viewMode === 'compact') {
+                    totalLoadedTasks = 2;
+                }
+                loadTasks();
+            };
+
+
+            request.onerror = (event) => {
+                console.error('Erro ao salvar o cronograma:', event.target.error);
+                showStatusMessage('Erro ao salvar o cronograma', 'error');
+            };
+        }
+
+        // 3. TOGGLESTEPCOMPLETION OTIMIZADA
+        function toggleStepCompletion(event) {
+            const taskId = parseInt(event.target.dataset.taskid);
+            const stepIndex = parseInt(event.target.dataset.stepindex);
+            const completed = event.target.checked;
+
+            console.log(`Atualizando passo ${stepIndex} da tarefa ${taskId}: ${completed}`);
+
+            // PRIMEIRO: Atualizar visualmente (sem piscada)
+            updateTaskProgressLocally(taskId, stepIndex, completed);
+
+            // SEGUNDO: Atualizar no banco de dados
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(taskId);
+
+            request.onsuccess = (event) => {
+                const task = event.target.result;
+
+                if (task && task.steps[stepIndex]) {
+                    // Atualizar no objeto da tarefa
+                    task.steps[stepIndex].completed = completed;
+
+                    // Verificar se todos os passos foram concluídos
+                    task.completed = task.steps.every(step => step.completed);
+
+                    // Salvar no banco de dados
+                    const updateRequest = store.put(task);
+
+                    updateRequest.onsuccess = () => {
+                        console.log('Passo salvo no banco com sucesso');
+
+                        // OPCIONAL: Recarregar apenas se necessário (ex: mudança de status geral da tarefa)
+                        // Uncomment a linha abaixo se quiser sincronização completa periodicamente
+                        // setTimeout(() => loadTasks(), 2000);
+                    };
+
+                    updateRequest.onerror = (event) => {
+                        console.error('Erro ao atualizar o passo:', event.target.error);
+                        showStatusMessage('Erro ao atualizar o passo', 'error');
+                        // Em caso de erro, recarregar para sincronizar
+                        loadTasks();
+                    };
+                }
+            };
+
+            request.onerror = (event) => {
+                console.error('Erro ao obter o cronograma:', event.target.error);
+                showStatusMessage('Erro ao obter o cronograma', 'error');
+                // Em caso de erro, recarregar
+                loadTasks();
+            };
+        }
+
+        // 1. MELHORAR O CONTROLE DE EVENTOS
+        function handleTaskStepClick(event) {
+            // Evitar que o clique no checkbox dispare o evento duas vezes
+            if (event.target.type === 'checkbox') {
+                return;
+            }
+
+            // NOVO: Parar completamente a propagação
+            event.stopPropagation();
+            event.preventDefault();
+
+            // Encontrar o checkbox dentro do task-step clicado
+            const checkbox = event.currentTarget.querySelector('.task-step-checkbox');
+
+            if (checkbox) {
+                // Alternar o estado do checkbox
+                checkbox.checked = !checkbox.checked;
+
+                // Disparar o evento de mudança para processar a atualização
+                const changeEvent = new Event('change', { bubbles: false }); // bubbles: false é importante
+                checkbox.dispatchEvent(changeEvent);
+            }
+        }
+
+        // 2. FUNÇÃO PARA ATUALIZAÇÃO LOCAL (SEM RECARREGAR TUDO)
+        function updateTaskProgressLocally(taskId, stepIndex, completed) {
+            const taskElement = document.querySelector(`[data-taskid="${taskId}"].edit-task-btn`).closest('.task-item');
+            if (!taskElement) return;
+
+            // Atualizar visualmente o step
+            const stepCheckbox = taskElement.querySelector(`[data-stepindex="${stepIndex}"]`);
+            const stepElement = stepCheckbox.closest('.task-step');
+
+            if (completed) {
+                stepElement.classList.add('completed');
+            } else {
+                stepElement.classList.remove('completed');
+            }
+
+            // Recalcular e atualizar a barra de progresso
+            const allSteps = taskElement.querySelectorAll('.task-step-checkbox');
+            const completedSteps = taskElement.querySelectorAll('.task-step-checkbox:checked');
+            const totalSteps = allSteps.length;
+            const completedCount = completedSteps.length;
+            const progressPercentage = totalSteps > 0 ? (completedCount / totalSteps) * 100 : 0;
+
+            // Atualizar barra de progresso
+            const progressBar = taskElement.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${progressPercentage}%`;
+            }
+
+            // Atualizar texto de progresso
+            const progressInfo = taskElement.querySelector('.task-info small');
+            if (progressInfo) {
+                progressInfo.textContent = `Progresso: ${completedCount}/${totalSteps} (${Math.round(progressPercentage)}%)`;
+            }
+
+            // Atualizar classe da tarefa inteira se estiver 100% concluída
+            if (progressPercentage === 100) {
+                taskElement.classList.add('completed');
+            } else {
+                taskElement.classList.remove('completed');
+            }
+
+            console.log(`Atualização local: ${completedCount}/${totalSteps} (${Math.round(progressPercentage)}%)`);
+        }//aqui o
+        
+        // Modificar a função loadTasks para incluir a pesquisa e paginação
+        function loadTasks() {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+
+
+            request.onsuccess = (event) => {
+                const tasks = event.target.result;
+
+
+                // Aplicar filtro de pesquisa
+                // Aplicar filtro de pesquisa (apenas no título)
+                const searchValue = searchInput.value.trim().toLowerCase();
+                filteredTasks = tasks.filter(task => {
+                    if (!searchValue) return true; // Se não há pesquisa, mostrar todas
+
+                    // Pesquisar APENAS por nome da tarefa
+                    return task.name.toLowerCase().includes(searchValue);
+                });
+
+
+                // Ordenar tarefas (mantendo a mesma lógica existente)
+                filteredTasks.sort((a, b) => {
+                    // Cronogramas concluídos vão para o final
+                    if (a.completed && !b.completed) return 1;
+                    if (!a.completed && b.completed) return -1;
+
+
+                    // Ordena por data de criação (mais recentes primeiro)
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                });
+
+
+                // Dependendo do modo de visualização, mostrar todas ou apenas algumas
+                if (viewMode === 'compact') {
+                    // No modo compacto, mostrar apenas o número especificado de tarefas (2 inicialmente)
+                    const tasksToShow = filteredTasks.slice(0, totalLoadedTasks);
+                    renderTasks(tasksToShow);
+
+
+                    // Atualizar botão "Mostrar Mais"
+                    updateShowMoreButton();
+
+
+                    // Ocultar controles de paginação no modo compacto
+                    document.getElementById('paginationControls').style.display = 'none';
+                } else {
+                    // No modo "todos", aplicar paginação normal
+                    const totalPages = Math.ceil(filteredTasks.length / pageSize);
+
+
+                    // Corrigir página atual se necessário
+                    if (currentPage > totalPages && totalPages > 0) {
+                        currentPage = totalPages;
+                    }
+
+
+                    // Calcular índices de início e fim para a página atual
+                    const startIndex = (currentPage - 1) * pageSize;
+                    const endIndex = Math.min(startIndex + pageSize, filteredTasks.length);
+
+
+                    // Obter tarefas para a página atual
+                    const tasksForCurrentPage = filteredTasks.slice(startIndex, endIndex);
+
+
+                    // Atualizar informações de paginação
+                    updatePaginationInfo(filteredTasks.length, totalPages);
+
+
+                    // Renderizar tarefas para a página atual
+                    renderTasks(tasksForCurrentPage);
+
+
+                    // Ocultar botão "Mostrar Mais" no modo "todos"
+                    document.getElementById('showMoreBtn').style.display = 'none';
+                }
+
+
+                // Exibir mensagem se nenhuma tarefa for encontrada com o filtro atual
+                if (filteredTasks.length === 0 && searchValue) {
+                    taskList.innerHTML = `<p style="text-align: center; margin-top: 20px;">Nenhum cronograma encontrado para "${searchValue}". Tente outra pesquisa.</p>`;
+                } else if (filteredTasks.length === 0) {
+                    taskList.innerHTML = '<p style="text-align: center; margin-top: 20px;">Nenhum cronograma encontrado. Crie um novo usando o formulário acima.</p>';
+                }
+            };
+
+
+            request.onerror = (event) => {
+                console.error('Erro ao carregar cronogramas:', event.target.error);
+                showStatusMessage('Erro ao carregar cronogramas', 'error');
+            };
+        }
+
+
+        function renderTasks(tasks) {
+            taskList.innerHTML = '';
+
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<p style="text-align: center; margin-top: 20px;">Nenhum cronograma encontrado. Crie um novo usando o formulário acima.</p>';
+                return;
+            }
+
+            tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                // Verificar se a tarefa deve estar expandida
+                const isExpanded = expandedTasks.has(task.id);
+                taskElement.className = `task-item ${task.completed ? 'completed' : ''} ${isExpanded ? 'expanded' : 'collapsed'}`;
+                // Calcular o progresso
+                const completedSteps = task.steps.filter(step => step.completed).length;
+                const totalSteps = task.steps.length;
+                const progressPercentage = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
+
+                taskElement.innerHTML = `
+            <div class="task-actions">
+                <button class="edit-task-btn" data-taskid="${task.id}">Editar</button>
+                <button class="delete-task-btn danger" data-taskid="${task.id}">Excluir</button>
+                <button class="read-task-btn" data-taskid="${task.id}">
+                    <span class="read-btn-text">🔊 Ler</span>
+                </button>
+            </div>
+            <div class="task-content">
+                <div class="task-name">${task.name}</div>
+                <div class="task-progress">
+                    <div class="progress-bar" style="width: ${progressPercentage}%"></div>
+                </div>
+                <div class="task-info">
+                    <small>Progresso: ${completedSteps}/${totalSteps} (${Math.round(progressPercentage)}%)</small>
+                </div>
+                
+                <!-- NOVO: Botão para expandir/recolher -->
+                <button class="expand-btn ${isExpanded ? 'expanded' : ''}" data-taskid="${task.id}">
+                    <span class="expand-icon">${isExpanded ? '▲' : '▼'}</span>
+                    <span class="expand-text">${isExpanded ? 'Recolher' : `Expandir (${totalSteps} passos)`}</span>
+                </button>
+                
+                <!-- Os passos começam ocultos ou expandidos conforme o estado -->
+                <div class="task-steps ${isExpanded ? '' : 'collapsed'}">
+                    ${task.steps.map((step, index) => `
+                        <div class="task-step ${step.completed ? 'completed' : ''}">
+                            <input type="checkbox" class="task-step-checkbox" data-taskid="${task.id}" data-stepindex="${index}" ${step.completed ? 'checked' : ''}>
+                            <div class="step-content">${step.text}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+                taskList.appendChild(taskElement);
+
+                // Event listeners existentes para checkboxes
+                const checkboxes = taskElement.querySelectorAll('.task-step-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', toggleStepCompletion);
+                });
+
+                // Event listeners existentes para clique nos task-steps
+                const taskSteps = taskElement.querySelectorAll('.task-step');
+                taskSteps.forEach(taskStep => {
+                    taskStep.addEventListener('click', handleTaskStepClick);
+                });
+
+                // Event listeners existentes para botões
+                const editBtn = taskElement.querySelector('.edit-task-btn');
+                const deleteBtn = taskElement.querySelector('.delete-task-btn');
+                const readBtn = taskElement.querySelector('.read-task-btn');
+
+                editBtn.addEventListener('click', () => openEditModal(task.id));
+                deleteBtn.addEventListener('click', () => deleteTask(task.id));
+                readBtn.addEventListener('click', () => toggleReadTask(task.id));
+
+                // NOVO: Event listener para o botão de expandir
+                const expandBtn = taskElement.querySelector('.expand-btn');
+                expandBtn.addEventListener('click', (e) => toggleTaskExpansion(e, task.id));
+            });
+        }
+        function toggleTaskExpansion(event, taskId) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const expandBtn = event.currentTarget;
+            const taskElement = expandBtn.closest('.task-item');
+            const taskSteps = taskElement.querySelector('.task-steps');
+            const expandIcon = expandBtn.querySelector('.expand-icon');
+            const expandText = expandBtn.querySelector('.expand-text');
+
+            const isCurrentlyCollapsed = taskElement.classList.contains('collapsed');
+
+            if (isCurrentlyCollapsed) {
+                // Expandir
+                expandedTasks.add(taskId); // Adicionar ao conjunto de expandidos
+                taskElement.classList.remove('collapsed');
+                taskElement.classList.add('expanded');
+                taskSteps.classList.remove('collapsed');
+                expandBtn.classList.add('expanded');
+
+                expandIcon.textContent = '▲';
+                expandText.textContent = 'Recolher';
+
+                console.log(`Cronograma "${taskId}" expandido`);
+            } else {
+                // Recolher
+                expandedTasks.delete(taskId); // Remover do conjunto de expandidos
+                taskElement.classList.add('collapsed');
+                taskElement.classList.remove('expanded');
+                taskSteps.classList.add('collapsed');
+                expandBtn.classList.remove('expanded');
+
+                expandIcon.textContent = '▼';
+
+                // Reobter a contagem de passos para o texto
+                const totalSteps = taskSteps.querySelectorAll('.task-step').length;
+                expandText.textContent = `Expandir (${totalSteps} passos)`;
+
+                console.log(`Cronograma "${taskId}" recolhido`);
+            }
+        }
+
+        function openEditModal(taskId) {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(taskId);
+
+
+            request.onsuccess = (event) => {
+                const task = event.target.result;
+
+
+                if (task) {
+                    editTaskNameInput.value = task.name;
+                    editTaskStepsInput.value = task.steps.map(step => step.text).join('\n');
+                    currentEditTaskId = taskId;
+
+
+                    taskModal.style.display = 'flex';
+                }
+            };
+
+
+            request.onerror = (event) => {
+                console.error('Erro ao obter o cronograma para edição:', event.target.error);
+                showStatusMessage('Erro ao obter o cronograma para edição', 'error');
+            };
+        }
+
+
+        function closeModal() {
+            taskModal.style.display = 'none';
+            currentEditTaskId = null;
+        }
+
+
+
+        function saveTaskChanges() {
+            if (!currentEditTaskId) return;
+
+
+            const name = editTaskNameInput.value.trim();
+            if (!name) {
+                showStatusMessage('Por favor, insira um nome para o cronograma', 'error');
+                return;
+            }
+
+
+            const stepsText = editTaskStepsInput.value.trim();
+            if (!stepsText) {
+                showStatusMessage('Por favor, insira pelo menos um passo', 'error');
+                return;
+            }
+
+
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(currentEditTaskId);
+
+
+            request.onsuccess = (event) => {
+                const task = event.target.result;
+
+
+                if (task) {
+                    const oldSteps = task.steps;
+                    const newStepTexts = stepsText.split('\n')
+                        .map(step => step.trim())
+                        .filter(step => step.length > 0);
+
+
+                    if (newStepTexts.length === 0) {
+                        showStatusMessage('Por favor, insira pelo menos um passo válido', 'error');
+                        return;
+                    }
+
+
+                    // Tentar preservar o estado de conclusão dos passos que mantêm o mesmo texto
+                    const newSteps = newStepTexts.map(text => {
+                        const existingStep = oldSteps.find(step => step.text === text);
+                        return existingStep || { text, completed: false };
+                    });
+
+
+                    task.name = name;
+                    task.steps = newSteps;
+                    task.completed = newSteps.every(step => step.completed);
+
+
+                    const updateRequest = store.put(task);
+
+
+                    updateRequest.onsuccess = () => {
+                        closeModal();
+                        loadTasks();
+                        showStatusMessage('Cronograma atualizado com sucesso!');
+                    };
+
+
+                    updateRequest.onerror = (event) => {
+                        console.error('Erro ao atualizar o cronograma:', event.target.error);
+                        showStatusMessage('Erro ao atualizar o cronograma', 'error');
+                    };
+                }
+            };
+
+
+            request.onerror = (event) => {
+                console.error('Erro ao obter o cronograma para edição:', event.target.error);
+                showStatusMessage('Erro ao obter o cronograma para edição', 'error');
+            };
+        }
+
+
+        function deleteTask(taskId) {
+            if (confirm('Tem certeza que deseja excluir este cronograma?')) {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(taskId);
+
+
+                request.onsuccess = () => {
+                    loadTasks();
+                    showStatusMessage('Cronograma excluído com sucesso!');
+                };
+
+
+                request.onerror = (event) => {
+                    console.error('Erro ao excluir o cronograma:', event.target.error);
+                    showStatusMessage('Erro ao excluir o cronograma', 'error');
+                };
+            }
+        }
+
+
+        function exportTasks() {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+
+
+            request.onsuccess = (event) => {
+                const tasks = event.target.result;
+
+
+                if (tasks.length === 0) {
+                    showStatusMessage('Não há cronogramas para exportar', 'error');
+                    return;
+                }
+
+
+                const dataStr = JSON.stringify(tasks, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+
+                const exportLink = document.createElement('a');
+                exportLink.setAttribute('href', dataUri);
+                exportLink.setAttribute('download', `cronogramas_${new Date().toISOString().slice(0, 10)}.json`);
+                document.body.appendChild(exportLink);
+
+
+                exportLink.click();
+                document.body.removeChild(exportLink);
+
+
+                showStatusMessage('Cronogramas exportados com sucesso!');
+            };
+
+
+            request.onerror = (event) => {
+                console.error('Erro ao exportar cronogramas:', event.target.error);
+                showStatusMessage('Erro ao exportar cronogramas', 'error');
+            };
+        }
+
+
+        function importTasks(event) {
+            const file = event.target.files[0];
+
+
+            if (!file) return;
+
+
+            const reader = new FileReader();
+
+
+            reader.onload = (e) => {
+                try {
+                    const tasks = JSON.parse(e.target.result);
+
+
+                    if (!Array.isArray(tasks)) throw new Error('Formato inválido');
+
+
+                    if (confirm('Deseja substituir todos os cronogramas existentes?\n\n• OK = Substituir tudo\n• Cancelar = Mesclar com os existentes')) {
+                        const clearTransaction = db.transaction([STORE_NAME], 'readwrite');
+                        const clearStore = clearTransaction.objectStore(STORE_NAME);
+                        const clearRequest = clearStore.clear();
+
+
+                        clearRequest.onsuccess = () => {
+                            addImportedTasks(tasks, 'substituídos');
+                        };
+
+
+                        clearRequest.onerror = (error) => {
+                            console.error('Erro ao limpar cronogramas existentes:', error);
+                            showStatusMessage('Erro ao substituir cronogramas', 'error');
+                            event.target.value = '';
+                        };
+                    } else {
+                        // MESCLAR COM VERIFICAÇÃO DE DUPLICATAS
+                        const transaction = db.transaction([STORE_NAME], 'readonly');
+                        const store = transaction.objectStore(STORE_NAME);
+                        const getAllRequest = store.getAll();
+
+
+                        getAllRequest.onsuccess = () => {
+                            const existingTasks = getAllRequest.result;
+                            const existingNames = new Set(existingTasks.map(t => t.name.trim().toLowerCase()));
+
+
+                            // Filtrar apenas tarefas com nomes únicos
+                            const uniqueTasks = tasks.filter(t => !existingNames.has(t.name.trim().toLowerCase()));
+
+
+                            addImportedTasks(uniqueTasks, 'mesclados');
+                        };
+
+
+                        getAllRequest.onerror = (event) => {
+                            console.error('Erro ao buscar tarefas existentes para mesclar:', event.target.error);
+                            showStatusMessage('Erro ao verificar duplicatas', 'error');
+                            event.target.value = '';
+                        };
+                    }
+
+
+                } catch (error) {
+                    console.error('Erro ao processar o arquivo JSON:', error);
+                    showStatusMessage('Erro ao processar o arquivo. Certifique-se de que é um arquivo JSON válido', 'error');
+                    event.target.value = '';
+                }
+            };
+
+
+            reader.onerror = () => {
+                console.error('Erro ao ler o arquivo');
+                showStatusMessage('Erro ao ler o arquivo', 'error');
+                event.target.value = '';
+            };
+
+
+            reader.readAsText(file);
+
+
+            function addImportedTasks(tasks, operation) {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+
+
+                let importedCount = 0;
+                let promises = [];
+
+
+                tasks.forEach(task => {
+                    const cleanTask = { ...task };
+                    delete cleanTask.id;
+
+
+                    const promise = new Promise((resolve) => {
+                        const addRequest = store.add(cleanTask);
+
+
+                        addRequest.onsuccess = () => {
+                            importedCount++;
+                            resolve();
+                        };
+
+
+                        addRequest.onerror = () => {
+                            resolve(); // Ignorar falhas individuais
+                        };
+                    });
+
+
+                    promises.push(promise);
+                });
+
+
+                Promise.all(promises).then(() => {
+                    loadTasks();
+                    showStatusMessage(`${importedCount} cronograma(s) ${operation} com sucesso!`);
+                    event.target.value = '';
+                });
+            }
+        }
+
+
+
+
+        function showStatusMessage(message, type = 'success') {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message';
+
+
+            if (type === 'error') {
+                statusMessage.style.backgroundColor = '#f8d7da';
+                statusMessage.style.color = '#721c24';
+            } else {
+                statusMessage.style.backgroundColor = '#d4edda';
+                statusMessage.style.color = '#155724';
+            }
+
+
+            // Mostrar a mensagem
+            setTimeout(() => {
+                statusMessage.classList.add('show');
+            }, 10);
+
+
+            // Esconder após alguns segundos
+            setTimeout(() => {
+                statusMessage.classList.remove('show');
+            }, 3000);
+        }
+
+        // Fecha o modal se clicar fora da área do conteúdo
+        function setupModalCloseOnOutsideClick() {
+            taskModal.addEventListener('click', (e) => {
+                // Se o clique foi diretamente no fundo do modal (não no conteúdo)
+                if (e.target === taskModal) {
+                    closeModal();
+                }
+            });
+        }
+
+
+        // Inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Aplicação inicializada');
+
+            // Verificar suporte à síntese de voz
+            if (!checkSpeechSynthesisSupport()) {
+                console.warn('Botões de leitura podem não funcionar corretamente');
+            }
+
+
+            // Definir tamanho de página padrão para 2 itens no modo compacto
+            if (viewMode === 'compact') {
+                pageSizeSelect.value = '2';
+                pageSize = 2;
+            }
+
+
+            // Verificar inicialmente o modo de visualização
+            viewMode = viewModeSelect.value;
+
+
+            // Configuração inicial do botão "Mostrar Mais"
+            updateShowMoreButton();
+            // Inicializar reconhecimento de voz
+            initSpeechRecognition();
+
+            setupModalCloseOnOutsideClick();
+        });
+        // Parar leitura quando sair da página
+        window.addEventListener('beforeunload', () => {
+            if (isReading) {
+                stopReading();
+            }
+        });
+    </script>
+</body>
+
+
+</html>
