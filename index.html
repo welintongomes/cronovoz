@@ -82,7 +82,7 @@
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 6px 12px;
             border-radius: var(--border-radius);
             cursor: pointer;
             font-size: 16px;
@@ -130,12 +130,6 @@
 
         .task-content {
             flex-grow: 1;
-        }
-
-
-        .task-actions {
-            display: flex;
-            gap: 10px;
         }
 
 
@@ -295,11 +289,10 @@
 
         .task-actions {
             display: flex;
-            justify-content: flex-start;
-
-
+            justify-content: flex-end;
             gap: 10px;
             margin-bottom: 10px;
+            flex-direction: row-reverse;
         }
 
 
@@ -465,9 +458,10 @@
 
         .create-btn-row {
             display: flex;
-            align-items: center;
             gap: 10px;
             margin-top: 20px;
+            align-items: center;
+            justify-content: space-between;
         }
 
         /* Estilos para o botão de leitura */
@@ -668,14 +662,14 @@
     <div class="container">
         <div class="form-group">
             <label for="taskName">Nome do Cronograma:</label>
-            <input type="text" id="taskName" placeholder="Ex: Pintar uma roda">
+            <input type="text" id="taskName" placeholder="Ex: Como fazer panquecas">
         </div>
 
 
         <div class="form-group">
             <label for="taskSteps">Passos a serem executados (um por linha):</label>
             <textarea id="taskSteps"
-                placeholder="Ex:&#10;Tirar rodas&#10;Pegar 4 lixas 320&#10;Lixar&#10;Limpar com pano úmido&#10;Soprar&#10;Colocar as capas&#10;Levar para estufa&#10;Pintar&#10;Montar"></textarea>
+                placeholder="1 xícara de farinha de trigo&#10;1 colher de sopa de açúcar&#10;1 colher de sopa de fermento em pó&#10;Etc."></textarea>
         </div>
 
 
@@ -755,7 +749,19 @@
                 <label for="editTaskSteps">Passos a serem executados (um por linha):</label>
                 <textarea id="editTaskSteps"></textarea>
             </div>
-            <button id="saveTaskBtn">Salvar Alterações</button>
+
+            <!-- ADICIONAR ESTE BLOCO: -->
+            <div class="create-btn-row">
+                <button id="saveTaskBtn">Salvar Alterações</button>
+                <div class="audio-btn-container">
+                    <button id="editAudioBtn" class="audio-btn">
+                        <span id="editAudioIcon">🎤</span>
+                        <span id="editAudioBtnText">Falar</span>
+                    </button>
+                </div>
+            </div>
+            <div id="editAudioStatus" class="audio-status"></div>
+
         </div>
     </div>
 
@@ -784,6 +790,9 @@
         let currentUtterance = null;
         let isReading = false;
         let currentReadingTaskId = null;
+        // Adicionar no início do script, junto com as outras variáveis
+        let isEditModalFirstAudioInput = true;
+        let isEditModalRecording = false;
 
 
         // Abrir conexão com o banco de dados
@@ -811,6 +820,96 @@
             console.log('Banco de dados aberto com sucesso');
             loadTasks();
         };
+
+        function toggleEditModalAudioRecording() {
+            if (!recognition && !initSpeechRecognition()) {
+                return;
+            }
+
+            if (isEditModalRecording) {
+                stopEditModalRecording();
+            } else {
+                startEditModalRecording();
+            }
+        }
+
+        function startEditModalRecording() {
+            try {
+                isEditModalRecording = true;
+                editAudioBtn.classList.add('recording');
+                editAudioIcon.textContent = '⏸️';
+                editAudioBtnText.textContent = 'Parar';
+
+                // CORREÇÃO: Configurar onresult especificamente para o modal
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript.trim();
+                    console.log('Texto reconhecido no modal:', transcript);
+
+                    if (transcript) {
+                        handleEditModalAudioInput(transcript);
+                    }
+                };
+
+                recognition.start();
+                showEditAudioStatus('🎤 Escutando... Fale agora!', 'listening');
+            } catch (error) {
+                console.error('Erro ao iniciar gravação no modal:', error);
+                showEditAudioStatus('Erro ao iniciar gravação', 'error');
+                stopEditModalRecording();
+            }
+        }
+
+        function stopEditModalRecording() {
+            if (recognition && isEditModalRecording) {
+                recognition.stop();
+            }
+
+            isEditModalRecording = false;
+            editAudioBtn.classList.remove('recording');
+            editAudioIcon.textContent = '🎤';
+            editAudioBtnText.textContent = 'Falar';
+        }
+
+        function handleEditModalAudioInput(text) {
+            if (isEditModalFirstAudioInput) {
+                // Primeira entrada vai para o título
+                editTaskNameInput.value = text;
+                isEditModalFirstAudioInput = false;
+
+                // Focar no textarea para próximas entradas
+                editTaskStepsInput.focus();
+
+                showEditAudioStatus('✅ Título definido! Continue falando para adicionar passos...', 'listening');
+
+                setTimeout(() => {
+                    hideEditAudioStatus();
+                }, 2000);
+            } else {
+                // Entradas subsequentes vão para os passos
+                const currentSteps = editTaskStepsInput.value;
+                const newStep = currentSteps ? currentSteps + '\n' + text : text;
+                editTaskStepsInput.value = newStep;
+
+                // Rolar para o final do textarea
+                editTaskStepsInput.scrollTop = editTaskStepsInput.scrollHeight;
+
+                showEditAudioStatus('✅ Passo adicionado!', 'listening');
+
+                setTimeout(() => {
+                    hideEditAudioStatus();
+                }, 1500);
+            }
+        }
+
+        function showEditAudioStatus(message, type) {
+            editAudioStatus.textContent = message;
+            editAudioStatus.className = `audio-status ${type}`;
+        }
+
+        function hideEditAudioStatus() {
+            editAudioStatus.className = 'audio-status';
+        }
+
 
 
         // Nova função para atualizar informações de paginação
@@ -856,6 +955,11 @@
         const saveTaskBtn = document.getElementById('saveTaskBtn');
         const modalCloseBtn = document.querySelector('.modal-close');
         const statusMessage = document.getElementById('statusMessage');
+
+        const editAudioBtn = document.getElementById('editAudioBtn');
+        const editAudioIcon = document.getElementById('editAudioIcon');
+        const editAudioBtnText = document.getElementById('editAudioBtnText');
+        const editAudioStatus = document.getElementById('editAudioStatus');
 
 
         // Adicionar referências aos elementos do DOM para a busca e paginação
@@ -924,6 +1028,8 @@
         });
 
 
+
+
         // Event listener para o seletor de modo de visualização
         viewModeSelect.addEventListener('change', function () {
             viewMode = this.value;
@@ -962,6 +1068,8 @@
 
 
         // Event Listeners
+        //event listener para editar por audio
+        editAudioBtn.addEventListener('click', toggleEditModalAudioRecording);
         createTaskBtn.addEventListener('click', createTask);
         exportBtn.addEventListener('click', exportTasks);
         importInput.addEventListener('change', importTasks);
@@ -990,17 +1098,13 @@
 
             recognition.onstart = function () {
                 console.log('Reconhecimento de voz iniciado');
-                showAudioStatus('🎤 Escutando... Fale agora!', 'listening');
-            };
-
-            recognition.onresult = function (event) {
-                const transcript = event.results[0][0].transcript.trim();
-                console.log('Texto reconhecido:', transcript);
-
-                if (transcript) {
-                    handleAudioInput(transcript);
+                // Mostrar status apenas se não estiver no modal
+                if (!isEditModalRecording) {
+                    showAudioStatus('🎤 Escutando... Fale agora!', 'listening');
                 }
             };
+
+            // REMOVER O recognition.onresult DAQUI - será configurado dinamicamente
 
             recognition.onerror = function (event) {
                 console.error('Erro no reconhecimento:', event.error);
@@ -1018,14 +1122,25 @@
                         break;
                 }
 
-                showAudioStatus(errorMessage, 'error');
+                if (isEditModalRecording) {
+                    showEditAudioStatus(errorMessage, 'error');
+                } else {
+                    showAudioStatus(errorMessage, 'error');
+                }
+
                 stopRecording();
+                stopEditModalRecording();
             };
 
             recognition.onend = function () {
                 console.log('Reconhecimento de voz finalizado');
+
+                // Parar gravação tanto na tela principal quanto no modal
                 stopRecording();
+                stopEditModalRecording();
+
                 hideAudioStatus();
+                hideEditAudioStatus();
             };
 
             return true;
@@ -1049,6 +1164,16 @@
                 audioBtn.classList.add('recording');
                 audioIcon.textContent = '⏸️';
                 audioBtnText.textContent = 'Parar';
+
+                // CORREÇÃO: Configurar onresult especificamente para tela principal
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript.trim();
+                    console.log('Texto reconhecido na tela principal:', transcript);
+
+                    if (transcript) {
+                        handleAudioInput(transcript);
+                    }
+                };
 
                 recognition.start();
             } catch (error) {
@@ -1152,15 +1277,18 @@
 
         function readTaskContent(task, taskId) {
             // Preparar o texto para leitura
-            let textToRead = `Cronograma: ${task.name}. `;
+            // let textToRead = `Cronograma: ${task.name}. `;
+            let textToRead = `${task.name}. `;
 
             if (task.steps && task.steps.length > 0) {
-                textToRead += `Este cronograma possui ${task.steps.length} passos: `;
+                // textToRead += `Este cronograma possui ${task.steps.length} passos: `;
+
 
                 task.steps.forEach((step, index) => {
                     const stepNumber = index + 1;
                     const status = step.completed ? 'concluído' : 'pendente';
-                    textToRead += `Passo ${stepNumber}: ${step.text}, status ${status}. `;
+                    //textToRead += `Passo ${stepNumber}: ${step.text}, status ${status}. `;
+                    textToRead += `: ${step.text},. `;
                 });
             } else {
                 textToRead += 'Este cronograma não possui passos definidos.';
@@ -1193,7 +1321,7 @@
                 isReading = false;
                 currentReadingTaskId = null;
                 updateReadButton(taskId, false);
-                showStatusMessage('Erro na leitura do cronograma', 'error');
+                showStatusMessage('Leitura Interrompida', 'error');
             };
 
             // Iniciar a leitura
@@ -1434,7 +1562,7 @@
 
             console.log(`Atualização local: ${completedCount}/${totalSteps} (${Math.round(progressPercentage)}%)`);
         }//aqui o
-        
+
         // Modificar a função loadTasks para incluir a pesquisa e paginação
         function loadTasks() {
             const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -1551,8 +1679,8 @@
 
                 taskElement.innerHTML = `
             <div class="task-actions">
-                <button class="edit-task-btn" data-taskid="${task.id}">Editar</button>
                 <button class="delete-task-btn danger" data-taskid="${task.id}">Excluir</button>
+                <button class="edit-task-btn" data-taskid="${task.id}">Editar</button>
                 <button class="read-task-btn" data-taskid="${task.id}">
                     <span class="read-btn-text">🔊 Ler</span>
                 </button>
@@ -1654,26 +1782,34 @@
             }
         }
 
+        // Modificar a função existente para resetar as variáveis de áudio
         function openEditModal(taskId) {
             const transaction = db.transaction([STORE_NAME], 'readonly');
             const store = transaction.objectStore(STORE_NAME);
             const request = store.get(taskId);
 
-
             request.onsuccess = (event) => {
                 const task = event.target.result;
-
 
                 if (task) {
                     editTaskNameInput.value = task.name;
                     editTaskStepsInput.value = task.steps.map(step => step.text).join('\n');
                     currentEditTaskId = taskId;
 
+                    // ADICIONAR ESTAS LINHAS:
+                    // Resetar variáveis de áudio do modal
+                    isEditModalFirstAudioInput = true;
+                    isEditModalRecording = false;
+
+                    // Resetar visual do botão
+                    editAudioBtn.classList.remove('recording');
+                    editAudioIcon.textContent = '🎤';
+                    editAudioBtnText.textContent = 'Falar';
+                    hideEditAudioStatus();
 
                     taskModal.style.display = 'flex';
                 }
             };
-
 
             request.onerror = (event) => {
                 console.error('Erro ao obter o cronograma para edição:', event.target.error);
@@ -1682,9 +1818,19 @@
         }
 
 
+        // Modificar a função existente para parar gravação ao fechar
         function closeModal() {
+            // Parar gravação se estiver ativa
+            if (isEditModalRecording) {
+                stopEditModalRecording();
+            }
+
             taskModal.style.display = 'none';
             currentEditTaskId = null;
+
+            // Resetar variáveis de áudio
+            isEditModalFirstAudioInput = true;
+            isEditModalRecording = false;
         }
 
 
