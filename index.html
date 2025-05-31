@@ -398,7 +398,7 @@
             background-color: #28a745;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 6px 12px;
             border-radius: var(--border-radius);
             cursor: pointer;
             font-size: 16px;
@@ -651,6 +651,7 @@
             font-style: italic;
             font-size: 12px;
         }
+        
     </style>
 </head>
 
@@ -1306,14 +1307,14 @@
                 isReading = true;
                 currentReadingTaskId = taskId;
                 updateReadButton(taskId, true);
-                console.log('Iniciou leitura do cronograma:', task.name);
+                // console.log('Iniciou leitura do cronograma:', task.name);
             };
 
             currentUtterance.onend = () => {
                 isReading = false;
                 currentReadingTaskId = null;
                 updateReadButton(taskId, false);
-                console.log('Finalizou leitura do cronograma:', task.name);
+                // console.log('Finalizou leitura do cronograma:', task.name);
             };
 
             currentUtterance.onerror = (event) => {
@@ -1447,7 +1448,7 @@
             const stepIndex = parseInt(event.target.dataset.stepindex);
             const completed = event.target.checked;
 
-            console.log(`Atualizando passo ${stepIndex} da tarefa ${taskId}: ${completed}`);
+            // console.log(`Atualizando passo ${stepIndex} da tarefa ${taskId}: ${completed}`);
 
             // PRIMEIRO: Atualizar visualmente (sem piscada)
             updateTaskProgressLocally(taskId, stepIndex, completed);
@@ -1471,7 +1472,7 @@
                     const updateRequest = store.put(task);
 
                     updateRequest.onsuccess = () => {
-                        console.log('Passo salvo no banco com sucesso');
+                        // console.log('Passo salvo no banco com sucesso');
 
                         // OPCIONAL: Recarregar apenas se necessário (ex: mudança de status geral da tarefa)
                         // Uncomment a linha abaixo se quiser sincronização completa periodicamente
@@ -1560,7 +1561,7 @@
                 taskElement.classList.remove('completed');
             }
 
-            console.log(`Atualização local: ${completedCount}/${totalSteps} (${Math.round(progressPercentage)}%)`);
+            // console.log(`Atualização local: ${completedCount}/${totalSteps} (${Math.round(progressPercentage)}%)`);
         }//aqui o
 
         // Modificar a função loadTasks para incluir a pesquisa e paginação
@@ -1763,7 +1764,7 @@
                 expandIcon.textContent = '▲';
                 expandText.textContent = 'Recolher';
 
-                console.log(`Cronograma "${taskId}" expandido`);
+                // console.log(`Cronograma "${taskId}" expandido`);
             } else {
                 // Recolher
                 expandedTasks.delete(taskId); // Remover do conjunto de expandidos
@@ -1778,7 +1779,7 @@
                 const totalSteps = taskSteps.querySelectorAll('.task-step').length;
                 expandText.textContent = `Expandir (${totalSteps} passos)`;
 
-                console.log(`Cronograma "${taskId}" recolhido`);
+                // console.log(`Cronograma "${taskId}" recolhido`);
             }
         }
 
